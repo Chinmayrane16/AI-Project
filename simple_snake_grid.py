@@ -174,9 +174,6 @@ class SimpleSnakeGrid:
         return []
 
     def all_vertices_visited(self,visited):
-        # for visit in visited:
-        #     print(visit)
-        # print("\n")
         for row in visited:
             for elem in row:
                 if elem == 0:
@@ -226,6 +223,3 @@ class SimpleSnakeGrid:
 
     def hamilton_actions(self):
         return self.hamilton_cycle(self.snake_head, self.snake_grid)
-        
-        # actions = self.hamilton_cycle(self.snake_head, self.snake_grid)
-        # return actions      
