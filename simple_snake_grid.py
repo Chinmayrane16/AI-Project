@@ -167,3 +167,60 @@ class SimpleSnakeGrid:
         # return empty array if no path found
         print("No path Found")
         return []
+
+    def all_vertices_visited(self,visited):
+        # for visit in visited:
+        #     print(visit)
+        # print("\n")
+        for row in visited:
+            for elem in row:
+                if elem == 0:
+                    return False
+        return True
+    
+
+    def hamilton_util(self,snake_grid, posR, posC, visited, snake_head,cum_actions):
+        DIRS = [([0,1], 1), ([1,0],2), ([0,-1],3),([-1,0], 0)]
+        visited[posR][posC] = 1
+
+        cycle_potential = False
+        if self.all_vertices_visited(visited):
+            cycle_potential = True
+
+        for dir in DIRS:
+            newR = posR + dir[0][0]
+            newC = posC + dir[0][1]
+
+            if cycle_potential and [newR,newC] == snake_head:
+                print("Found a hamilton cycle")
+                new_actions = [action for action in cum_actions]
+                new_actions.append(dir[1])
+                return new_actions
+
+            if newR < 0 or newR == len(snake_grid) or newC < 0 or newC == len(snake_grid) or visited[newR][newC] == 1:
+                continue
+            
+            new_actions = [action for action in cum_actions]
+            new_actions.append(dir[1])
+            
+            action_list = self.hamilton_util(snake_grid, newR, newC, visited,snake_head, new_actions)
+            if action_list:
+                return action_list
+
+        visited[posR][posC] = 0
+        return []
+
+    def hamilton_cycle(self,snake_head, snake_grid):
+        rows = len(snake_grid)
+        cols = len(snake_grid[0])
+        visited = [[0 for i in range(cols)] for j in range(rows)]
+
+        return self.hamilton_util(snake_grid, snake_head[0], snake_head[1],visited,snake_head,[])
+
+        
+
+    def hamilton_actions(self):
+        return self.hamilton_cycle(self.snake_head, self.snake_grid)
+        
+        # actions = self.hamilton_cycle(self.snake_head, self.snake_grid)
+        # return actions      

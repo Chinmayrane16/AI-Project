@@ -9,12 +9,15 @@ np.set_printoptions(threshold=np.inf)
 env = gym.make('snake-v0',grid_size=[8,8], unit_size=1,unit_gap=0,snake_size=2)
 observation = env.reset() # Constructs an instance of the game
 snake_grid = SimpleSnakeGrid(observation)
+snake_grid.update_observation(observation)
 
-# BFS
+# precompute hamilton path
+actions = snake_grid.hamilton_actions()
+print(actions)
+# Hamilton path
 while True:
     snake_grid.update_observation(observation)
     snake_grid.print_grid()
-    actions = snake_grid.bfs_actions()
 
     if not actions:
         break
@@ -25,19 +28,5 @@ while True:
     if done:
         env.render()
         break
-
-# try random actions
-# for _ in range(100):
-#     env.render()
-#     action = env.action_space.sample()
-#     print(action)
-#     observation, reward, done, info = env.step(action) # take a random action
-
-#     # print(info)
-#     if done:
-#         break
-
-# # bfs search
-# curr_pos = get_snake_head(observation)
 
 env.close()
