@@ -6,8 +6,9 @@ from simple_snake_grid import SimpleSnakeGrid
 np.set_printoptions(threshold=np.inf)
 
 # Construct Environment
-env = gym.make('snake-v0',grid_size=[15,15], unit_size=1,unit_gap=0,snake_size=2)
-observation = env.reset() # Constructs an instance of the game
+env = gym.make('snake-v0', grid_size=[15, 15],
+               unit_size=1, unit_gap=0, snake_size=2)
+observation = env.reset()  # Constructs an instance of the game
 snake_grid = SimpleSnakeGrid(observation)
 
 # BFS
@@ -19,7 +20,7 @@ while True:
         break
     for action in actions:
         env.render()
-        observation, _, done, _ = env.step(action) # take a random action
+        observation, _, done, _ = env.step(action)  # take a random action
 
     if done:
         env.render()
