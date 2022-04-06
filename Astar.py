@@ -7,18 +7,17 @@ import heapq as hq
 class PriorityQueue:
     
     def  __init__(self):
-        self.Pqueue = []
+        self.Priorityheap = []
 
     def isEmpty(self):
-        return len(self.Pqueue) == 0
+        return len(self.Priorityheap) == 0
 
     def push(self,total_cost,data):
         item = (total_cost,data)
-        hq.heappush(self.Pqueue,item)
+        hq.heappush(self.Priorityheap,item)
 
     def pop(self):
-        _,data = hq.heappop(self.Pqueue)
-        print(self.Pqueue)
+        cost,data = hq.heappop(self.Priorityheap)
         return data
 
 
