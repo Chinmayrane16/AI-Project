@@ -18,17 +18,19 @@ Doubts
 1) Logic in ComputeActionFromQValues
 2) Changed self.QTable((deque, action))
 '''
+# from black import get_features_used
 import gym
 import gym_snake
 import numpy as np
 from collections import deque, Counter
 from simple_snake_grid import SimpleSnakeGrid
 import random
+from math import sqrt
 
 
 class SnakeQlearning:
 
-    def __init__(self, epsilon, lr, gamma, numEpisodes) -> None:
+    def __init__(self, epsilon, lr, gamma, numTrainEpisodes, numTestEpisodes) -> None:
         # UP = 0
         # RIGHT = 1
         # DOWN = 2
@@ -40,9 +42,13 @@ class SnakeQlearning:
         self.lr = lr
         self.discount = gamma
         self.QTable = Counter()
-        self.numEpisodes = numEpisodes
+        self.numTrainEpisodes = numTrainEpisodes
+        self.numTestEpisodes = numTestEpisodes
         self.rewards = []
         self.accumRewards = 0
+        self.snake_lengths = []
+        self.max_snake_length = 0
+        self.dying_reward = -1000
 
     def print_grid(self, snake_grid):
         for row in snake_grid:
@@ -54,17 +60,18 @@ class SnakeQlearning:
         # head = self.snakeGridObj.snake_head
         # self.print_grid(snake_grid)
 
-        rows = len(snake_grid)
-        cols = len(snake_grid[0])
-        # Return legal actions
-        legal_actions = []
-        for dir in self.DIRS:
-            newR = head[0] + dir[0][0]
-            newC = head[1] + dir[0][1]
-            if newR >= 0 and newR < rows and newC >= 0 and newC < cols and (snake_grid[newR][newC] in [0, 1]):
-                legal_actions.append(dir[1])
+        legal_actions = [0, 1, 2, 3]
+        mapDirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+        snake_dq = self.snakeGridObj.virtual_snake_dq
+        head = snake_dq[-1]
+        neck = snake_dq[-2]
 
-        print("Legal action", legal_actions)
+        dir = [neck[i] - head[i] for i in range(2)]
+        not_legal_action = mapDirs.index(dir)
+
+        legal_actions.remove(not_legal_action)
+
+        # print("Legal action", legal_actions)
         return legal_actions
 
     def getQValue(self, snake_state, action):
@@ -94,11 +101,67 @@ class SnakeQlearning:
         else:
             return None
 
+    def get_features(self, snake_dq):
+        feature_set = [0] * 10    # [UP, DOWN, LEFT, RIGHT]
+        snake_grid = self.snake_grid
+        up = left = -1
+        down = right = 1
+
+        head = snake_dq[-1]
+        food_loc = self.snakeGridObj.snake_food
+
+        # Food relative to head
+        dir = [food_loc[i] - head[i] for i in range(2)]
+        feature_set[0:2] = [0, 1] if dir[0] > 0 else [1, 0] if dir[0] < 0 else [0, 0]
+        feature_set[2:4] = [0, 1] if dir[1] > 0 else [1, 0] if dir[1] < 0 else [0, 0]
+
+        # Obstacle relative to head
+        rows = len(snake_grid)
+        cols = len(snake_grid[0])
+
+        legal_actions = self.get_legal_actions(snake_grid, head)
+
+        # if 0 in legal_actions:
+        newU = head[0] + up
+        if newU < 0 or snake_grid[newU][head[1]] == 2:
+            feature_set[4] = 1
+
+        # if 2 in legal_actions:
+        newD = head[0] + down
+        if newD >= rows or snake_grid[newD][head[1]] == 2:
+            feature_set[5] = 1
+
+        # if 1 in legal_actions:
+        newR = head[1] + right
+        if newR >= cols or snake_grid[head[0]][newR] == 2:
+            feature_set[6] = 1
+
+        # if 3 in legal_actions:
+        newL = head[1] + left
+        if newL < 0 or snake_grid[head[0]][newL] == 2:
+            feature_set[7] = 1
+
+        # Snake direction
+        neck = snake_dq[-2]
+        dir = [head[i] - neck[i] for i in range(2)]
+        # UP = 0 RIGHT = 1 DOWN = 2 LEFT = 3
+        mapDirs = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+        feature_set[8] = mapDirs.index(dir)
+
+        # Manhattan distance to food
+        feature_set[9] = self.manhattan(head, food_loc)
+        # print("Feature set", tuple(feature_set))
+        return tuple(feature_set)
+
+
+    def manhattan(self, a, b):
+        return sum(abs(val1-val2) for val1, val2 in zip(a,b))
+        
+
     def get_state(self, snake_dq):
-        # self.snake_grid, self.snake_head, _, self.snake_food = self.snakeGridObj.get_updated_grid(
-        #     self.observation)
-        snake_dq = [tuple(x) for x in snake_dq]
-        return (tuple(snake_dq), tuple(self.snakeGridObj.snake_food))
+        # snake_dq = [tuple(x) for x in snake_dq]
+        # return (tuple(snake_dq), tuple(self.snakeGridObj.snake_food))
+        return self.get_features(snake_dq)
 
     def get_action(self):
         # function returns either random action or q table action depending on epsilon
@@ -139,7 +202,7 @@ class SnakeQlearning:
 
     def get_reward(self, action):
         if action == None:
-            return -100
+            return self.dying_reward
 
         newHead = self.get_head_from_action(action)
 
@@ -150,13 +213,15 @@ class SnakeQlearning:
         newR = newHead[0]
         newC = newHead[1]
         print("New Head", newHead, rows, cols)
-        if newR < 0 and newR >= rows and newC < 0 and newC >= cols and (snake_grid[newR][newC] not in [0, 1]):
-            return -100
+        if newR < 0 or newR >= rows or newC < 0 or newC >= cols or (snake_grid[newR][newC] not in [0, 1]):
+            return self.dying_reward
 
         if newHead == self.snakeGridObj.snake_food:
             return 100
 
-        return -5
+        # Negative - Get to food asap
+        # living reward
+        return 0
 
     def get_head_from_action(self, action):
         head = self.snake_head
@@ -170,9 +235,12 @@ class SnakeQlearning:
         return newHead
 
     def create_grid_from_v_snake(self, virtual_snake_dq, food_loc):
-        rows, cols = (
-            self.observation.shape[0], self.observation.shape[1])
+        rows, cols = (self.observation.shape[0], self.observation.shape[1])
         arr = [[0 for i in range(cols)] for j in range(rows)]
+
+        # Food location
+        position_obj = food_loc
+        arr[position_obj[0]][position_obj[1]] = self.snakeGridObj.FOOD_CODE
 
         for i in range(len(virtual_snake_dq)):
             position_obj = virtual_snake_dq[i]
@@ -181,10 +249,6 @@ class SnakeQlearning:
         # finally add position to this virtual grid
         position_obj = virtual_snake_dq[-1]
         arr[position_obj[0]][position_obj[1]] = self.snakeGridObj.HEAD_CODE
-
-        # Food location
-        position_obj = food_loc
-        arr[position_obj[0]][position_obj[1]] = self.snakeGridObj.FOOD_CODE
 
         return arr
 
@@ -199,30 +263,37 @@ class SnakeQlearning:
             snake_dq, self.snakeGridObj.snake_food)
         self.snake_head = snake_dq[-1]
 
+        self.max_snake_length = max(self.max_snake_length, len(snake_dq))
+
     def train(self):
-        for i in range(self.numEpisodes):
+        for i in range(self.numTrainEpisodes):
             # Construct Environment
             env = gym.make(
                 'snake-v0', grid_size=[6, 6], unit_size=1, unit_gap=0, snake_size=2)
             self.observation = env.reset()  # Constructs an instance of the game
             self.snakeGridObj = SimpleSnakeGrid(self.observation)
             self.snakeGridObj.update_observation(self.observation)
-            self.snakeGridObj.print_grid()
+            # self.snakeGridObj.print_grid()
 
             self.snake_grid = self.snakeGridObj.snake_grid.copy()
             self.snake_head = self.snakeGridObj.snake_head.copy()
 
+            # print("Episode", i+1)
+
             # Print status
             if (i+1) % 100 == 0:
-                print("Episodes {} \nAverage rewards {} \nAverage Rewards over last 100 episodes".format(
-                    i+1, np.mean(self.rewards)), np.mean(self.rewards[-100:]))
+                print("\nEpisodes: {} \nAverage rewards: {} \nAverage Rewards over last 100 episodes: {}\nMax Snake length till now: {} \nAvg Snake length till now: {} \nAvg Snake length 100 episodes: {}".format(
+                    i+1, np.mean(self.rewards), np.mean(self.rewards[-100:]), self.max_snake_length, np.mean(self.snake_lengths), np.mean(self.snake_lengths[-100:])))
 
             reward = 0
             while True:
+                self.print_grid(self.snake_grid)
                 curr_state = self.get_state(self.snakeGridObj.virtual_snake_dq)
                 # print("Curr State", curr_state)
                 curr_action = self.get_action()
-                # print("Curr action", curr_action)
+                actions_name = ["Up", "Right", "Down", "Left"]
+                print("Curr action", actions_name[curr_action])
+                print(self.get_features(self.snakeGridObj.virtual_snake_dq))
                 # self.print_grid(self.snake_grid)
 
                 # Action = None handled in get_reward
@@ -230,10 +301,12 @@ class SnakeQlearning:
                 # Dequeue is update here
                 reward = self.get_reward(curr_action)
                 # print("Reward", reward)
-                if reward == -100:
-                    print("Current state", curr_state)
-                    print("Current action", curr_action)
-                    self.print_grid(self.snake_grid)
+                if reward == self.dying_reward:
+                    # print("Current state", curr_state)
+                    # print("Current action", curr_action)
+                    # self.print_grid(self.snake_grid)
+                    self.snake_lengths.append(len(self.snakeGridObj.virtual_snake_dq))
+                    # print()
                     break
                 self.update_dq(curr_action, reward)
                 snake_dq = self.snakeGridObj.virtual_snake_dq
@@ -258,8 +331,41 @@ class SnakeQlearning:
                     self.snakeGridObj.update_observation(self.observation)
 
             # Scoring -> food eaten / snake length, avg rewards, no of steps taken
-            # ToDO tomorrow - legalActions replace by all possible actions
-            # Change features / state
+            # ToDO tomorrow - legalActions replace by 3 legal actions - done
+            # Change features / state - done
+            # Update reward strategy
             # Write test logic
 
-            env.close()
+        env.close()
+
+
+    def test(self):
+        self.epsilon = 0
+
+        for i in range(self.numTestEpisodes):
+            # Construct Environment
+            env = gym.make(
+                'snake-v0', grid_size=[6, 6], unit_size=1, unit_gap=0, snake_size=2)
+            self.observation = env.reset()  # Constructs an instance of the game
+            self.snakeGridObj = SimpleSnakeGrid(self.observation)
+            self.snakeGridObj.update_observation(self.observation)
+            # self.snakeGridObj.print_grid()
+
+            self.snake_grid = self.snakeGridObj.snake_grid.copy()
+            self.snake_head = self.snakeGridObj.snake_head.copy()
+
+            reward = 0
+            while True:
+                curr_action = self.get_action()
+                reward = self.get_reward(curr_action)
+                if reward == self.dying_reward:
+                    break
+
+                self.update_dq(curr_action, reward)
+                env.render()
+                self.observation, _, done, _ = env.step(curr_action)
+
+                if reward == 100:
+                    self.snakeGridObj.update_observation(self.observation)
+
+        env.close()
