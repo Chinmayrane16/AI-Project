@@ -18,7 +18,7 @@ Doubts
 1) Logic in ComputeActionFromQValues
 2) Changed self.QTable((deque, action))
 '''
-from black import get_features_used
+# from black import get_features_used
 import gym
 import gym_snake
 import numpy as np
@@ -48,6 +48,7 @@ class SnakeQlearning:
         self.accumRewards = 0
         self.snake_lengths = []
         self.max_snake_length = 0
+        self.dying_reward = -1000
 
     def print_grid(self, snake_grid):
         for row in snake_grid:
@@ -102,7 +103,7 @@ class SnakeQlearning:
 
     def get_features(self, snake_dq):
         feature_set = [0] * 10    # [UP, DOWN, LEFT, RIGHT]
-        snake_grid = self.snakeGridObj.snake_grid
+        snake_grid = self.snake_grid
         up = left = -1
         down = right = 1
 
@@ -120,25 +121,25 @@ class SnakeQlearning:
 
         legal_actions = self.get_legal_actions(snake_grid, head)
 
-        if 0 in legal_actions:
-            newU = head[0] + up
-            if newU < 0 or snake_grid[newU][head[1]] == 2:
-                feature_set[4] = 1
+        # if 0 in legal_actions:
+        newU = head[0] + up
+        if newU < 0 or snake_grid[newU][head[1]] == 2:
+            feature_set[4] = 1
 
-        if 2 in legal_actions:
-            newD = head[0] + down
-            if newD >= rows or snake_grid[newD][head[1]] == 2:
-                feature_set[5] = 1
+        # if 2 in legal_actions:
+        newD = head[0] + down
+        if newD >= rows or snake_grid[newD][head[1]] == 2:
+            feature_set[5] = 1
 
-        if 1 in legal_actions:
-            newR = head[1] + right
-            if newR >= cols or snake_grid[head[0]][newR] == 2:
-                feature_set[6] = 1
+        # if 1 in legal_actions:
+        newR = head[1] + right
+        if newR >= cols or snake_grid[head[0]][newR] == 2:
+            feature_set[6] = 1
 
-        if 3 in legal_actions:
-            newL = head[1] + left
-            if newL < 0 or snake_grid[head[0]][newL] == 2:
-                feature_set[7] = 1
+        # if 3 in legal_actions:
+        newL = head[1] + left
+        if newL < 0 or snake_grid[head[0]][newL] == 2:
+            feature_set[7] = 1
 
         # Snake direction
         neck = snake_dq[-2]
@@ -149,7 +150,7 @@ class SnakeQlearning:
 
         # Manhattan distance to food
         feature_set[9] = self.manhattan(head, food_loc)
-        # print("Feature set", feature_set)
+        # print("Feature set", tuple(feature_set))
         return tuple(feature_set)
 
 
@@ -201,7 +202,7 @@ class SnakeQlearning:
 
     def get_reward(self, action):
         if action == None:
-            return -300
+            return self.dying_reward
 
         newHead = self.get_head_from_action(action)
 
@@ -211,16 +212,16 @@ class SnakeQlearning:
         cols = len(snake_grid[0])
         newR = newHead[0]
         newC = newHead[1]
-        # print("New Head", newHead, rows, cols)
+        print("New Head", newHead, rows, cols)
         if newR < 0 or newR >= rows or newC < 0 or newC >= cols or (snake_grid[newR][newC] not in [0, 1]):
-            return -300
+            return self.dying_reward
 
         if newHead == self.snakeGridObj.snake_food:
             return 100
 
         # Negative - Get to food asap
         # living reward
-        return -1
+        return 0
 
     def get_head_from_action(self, action):
         head = self.snake_head
@@ -286,12 +287,13 @@ class SnakeQlearning:
 
             reward = 0
             while True:
-                # self.print_grid(self.snake_grid)
+                self.print_grid(self.snake_grid)
                 curr_state = self.get_state(self.snakeGridObj.virtual_snake_dq)
                 # print("Curr State", curr_state)
                 curr_action = self.get_action()
-                # print("Curr action", curr_action)
-                # print(self.get_features(self.snakeGridObj.virtual_snake_dq))
+                actions_name = ["Up", "Right", "Down", "Left"]
+                print("Curr action", actions_name[curr_action])
+                print(self.get_features(self.snakeGridObj.virtual_snake_dq))
                 # self.print_grid(self.snake_grid)
 
                 # Action = None handled in get_reward
@@ -299,7 +301,7 @@ class SnakeQlearning:
                 # Dequeue is update here
                 reward = self.get_reward(curr_action)
                 # print("Reward", reward)
-                if reward == -300:
+                if reward == self.dying_reward:
                     # print("Current state", curr_state)
                     # print("Current action", curr_action)
                     # self.print_grid(self.snake_grid)
@@ -317,13 +319,13 @@ class SnakeQlearning:
                 self.bellmanUpdate(curr_state, curr_action,
                                    nextState, reward, self.snake_grid, self.snake_head)
 
-                # env.render()
+                env.render()
                 self.observation, _, done, _ = env.step(curr_action)
 
                 self.rewards.append(reward)
                 self.accumRewards += reward
 
-                # print()
+                print()
 
                 if reward == 100:
                     self.snakeGridObj.update_observation(self.observation)
@@ -356,7 +358,7 @@ class SnakeQlearning:
             while True:
                 curr_action = self.get_action()
                 reward = self.get_reward(curr_action)
-                if reward == -300:
+                if reward == self.dying_reward:
                     break
 
                 self.update_dq(curr_action, reward)
