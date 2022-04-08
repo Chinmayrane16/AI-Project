@@ -234,10 +234,16 @@ class SimpleSnakeGrid:
             # check for path to tail from here
             if self.Astar(virtual_snake[-1], look_ahead_grid, virtual_snake[0]):
                 print("path to tail is availble from food location")
+                self.follow_tail_ctr = 0
                 self.virtual_snake_dq = virtual_snake
                 return actions
 
         print("no path is available from food source. Following tail!")
+        if self.follow_tail_ctr >= 50:
+            print('followed tail for many times..!!..exiting')
+            return []
+        
+        self.follow_tail_ctr += 1
         self.perform_virtual_moves(follow_tail, virtual_snake_curr)
         self.virtual_snake_dq = virtual_snake_curr
         return follow_tail

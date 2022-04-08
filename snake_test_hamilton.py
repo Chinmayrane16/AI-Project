@@ -2,7 +2,6 @@ import gym
 import gym_snake
 import numpy as np
 from simple_snake_grid import SimpleSnakeGrid
-import time
 
 np.set_printoptions(threshold=np.inf)
 
@@ -25,7 +24,6 @@ while True:
     for action in actions:
         env.render()
         observation, _, done, _ = env.step(action) # take hamilton path
-        time.sleep(4)
 
     if done:
         env.render()

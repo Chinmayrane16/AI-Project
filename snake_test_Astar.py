@@ -26,18 +26,5 @@ while True:
         env.render()
         break
 
-# try random actions
-# for _ in range(100):
-#     env.render()
-#     action = env.action_space.sample()
-#     print(action)
-#     observation, reward, done, info = env.step(action) # take a random action
-
-#     # print(info)
-#     if done:
-#         break
-
-# # Astar search
-# curr_pos = get_snake_head(observation)
 
 env.close()
