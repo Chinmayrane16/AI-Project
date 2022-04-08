@@ -275,7 +275,7 @@ class SimpleSnakeGrid:
                     new_actions = [action for action in actions]
                     new_actions.append(dir[1])
                     #new cost
-                    new_path_cost = path_cost + self.manhattan_dist(head,(newR,newC))
+                    new_path_cost = path_cost + 1
                     new_total_cost = new_path_cost + self.heuristic((newR,newC),dest) 
                     pqueue.push(new_total_cost,((newR, newC), new_actions,new_path_cost))
 
