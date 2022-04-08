@@ -32,6 +32,7 @@ def distanceMoves(action, snake_grid, move_before):
     return action
 
 def play_game(actions):
+    print(type(actions))
     observation = env.reset()
     snake_grid = SimpleSnakeGrid(observation)
 
@@ -47,7 +48,7 @@ def play_game(actions):
         move_before = actions[0]
         for action in actions:
             action = distanceMoves(action, snake_grid, move_before)
-            env.render()
+            # env.render()
             observation, reward, done, _ = env.step(action)
             
             # Snake Length
@@ -55,7 +56,7 @@ def play_game(actions):
                 snake_len = snake_len + reward
             
             # Calculate Reward
-            curr_reward = reward * 10 if reward < 0 else reward * 50
+            curr_reward = reward * 1000 if reward < 0 else reward * 500
             if curr_reward == 0:
                 curr_reward = curr_reward - 1
             
@@ -73,7 +74,7 @@ def play_game(actions):
             break
 
     env.close()
-    return total_reward, snake_len
+    return total_reward + snake_len * 5000, snake_len
 
 GENERATIONS = 100
 
