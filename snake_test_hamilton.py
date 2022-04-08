@@ -2,6 +2,7 @@ import gym
 import gym_snake
 import numpy as np
 from simple_snake_grid import SimpleSnakeGrid
+import time
 
 np.set_printoptions(threshold=np.inf)
 
@@ -13,7 +14,7 @@ snake_grid.update_observation(observation)
 
 # precompute hamilton path
 actions = snake_grid.hamilton_actions()
-print(actions)
+
 # Hamilton path
 while True:
     snake_grid.update_observation(observation)
@@ -23,7 +24,8 @@ while True:
         break
     for action in actions:
         env.render()
-        observation, _, done, _ = env.step(action) # take a random action
+        observation, _, done, _ = env.step(action) # take hamilton path
+        time.sleep(4)
 
     if done:
         env.render()
