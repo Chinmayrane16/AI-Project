@@ -1,7 +1,7 @@
 import gym
 import gym_snake
 import numpy as np
-from Astar import SimpleSnakeGrid
+from simple_snake_grid import SimpleSnakeGrid
 
 np.set_printoptions(threshold=np.inf)
 

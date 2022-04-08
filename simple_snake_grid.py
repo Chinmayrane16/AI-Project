@@ -1,6 +1,22 @@
 import numpy as np
 from collections import deque
+import heapq as hq
 
+class PriorityQueue:
+    
+    def  __init__(self):
+        self.Priorityheap = []
+
+    def isEmpty(self):
+        return len(self.Priorityheap) == 0
+
+    def push(self,total_cost,data):
+        item = (total_cost,data)
+        hq.heappush(self.Priorityheap,item)
+
+    def pop(self):
+        cost,data = hq.heappop(self.Priorityheap)
+        return data
 
 class SimpleSnakeGrid:
     HEAD_COLOR = np.array([255, 10, 0])  # red
@@ -196,7 +212,81 @@ class SimpleSnakeGrid:
 
         return self.hamilton_util(snake_grid, snake_head[0], snake_head[1],visited,snake_head,[])
 
-        
-
     def hamilton_actions(self):
         return self.hamilton_cycle(self.snake_head, self.snake_grid)
+
+    def Astar_actions(self):
+        virtual_snake_curr = self.virtual_snake_dq.copy()
+        look_ahead_grid = self.create_grid_from_v_snake(virtual_snake_curr)
+
+        follow_tail = self.Astar(
+            virtual_snake_curr[-1], look_ahead_grid, virtual_snake_curr[0])
+        print("follow tail actions ** ", follow_tail)
+
+        actions = self.Astar(self.snake_head, self.snake_grid, self.snake_food)
+
+        # update our virtual snake to be at the food position if the path is available
+        if actions:
+            virtual_snake = self.virtual_snake_dq.copy()
+            self.perform_virtual_moves(actions, virtual_snake)
+            look_ahead_grid = self.create_grid_from_v_snake(virtual_snake)
+
+            # check for path to tail from here
+            if self.Astar(virtual_snake[-1], look_ahead_grid, virtual_snake[0]):
+                print("path to tail is availble from food location")
+                self.virtual_snake_dq = virtual_snake
+                return actions
+
+        print("no path is available from food source. Following tail!")
+        self.perform_virtual_moves(follow_tail, virtual_snake_curr)
+        self.virtual_snake_dq = virtual_snake_curr
+        return follow_tail
+
+
+    def Astar(self, start, snake_grid, dest):
+        pqueue = PriorityQueue()
+        pqueue.push(0 + self.heuristic(start,dest),((start),[],0))
+        rows = len(snake_grid)
+        cols = len(snake_grid[0])
+        visited = [[0 for i in range(cols)] for j in range(rows)]
+        # UP = 0
+        # RIGHT = 1
+        # DOWN = 2
+        # LEFT = 3
+        DIRS = [([0, 1], 1), ([1, 0], 2), ([0, -1], 3), ([-1, 0], 0)]
+
+        visited[start[0]][start[1]] = 1
+
+        print('start loc', start)
+
+        while (pqueue.isEmpty()==False):
+            head,actions,path_cost = pqueue.pop()
+            if head[0] == dest[0] and head[1] == dest[1]:
+                return actions
+
+            for dir in DIRS:
+
+                newR = head[0] + dir[0][0]
+                newC = head[1] + dir[0][1]
+
+                if newR >= 0 and newR < rows and newC >= 0 and newC < cols and visited[newR][newC] == 0 and (snake_grid[newR][newC] in [0, 1]):
+                    visited[newR][newC] = 1
+                    # define new action
+                    new_actions = [action for action in actions]
+                    new_actions.append(dir[1])
+                    #new cost
+                    new_path_cost = path_cost + self.manhattan_dist(head,(newR,newC))
+                    new_total_cost = new_path_cost + self.heuristic((newR,newC),dest) 
+                    pqueue.push(new_total_cost,((newR, newC), new_actions,new_path_cost))
+
+        # return empty array if no path found
+        print("No path Found")
+        return []
+
+
+    def manhattan_dist(self,state,dest):
+        return abs(state[0] - dest[0]) + abs( state[1] - dest[1])
+
+
+    def heuristic(self,state,dest):
+        return self.manhattan_dist(state,dest)
