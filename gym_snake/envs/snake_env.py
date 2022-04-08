@@ -33,7 +33,7 @@ class SnakeEnv(gym.Env):
         self.last_obs = self.controller.grid.grid.copy()
         return self.last_obs
 
-    def render(self, mode='human', close=False, frame_speed=.1):
+    def render(self, mode='human', close=False, frame_speed=0.05):
         if self.viewer is None:
             self.fig = plt.figure()
             self.viewer = self.fig.add_subplot(111)
