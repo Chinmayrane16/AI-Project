@@ -128,15 +128,6 @@ class SimpleSnakeGrid(PriorityQueue):
 
         return arr
 
-
-    def all_vertices_visited(self,visited):
-        for row in visited:
-            for elem in row:
-                if elem == 0:
-                    return False
-        return True
-    
-
     def Astar_actions(self):
         virtual_snake_curr = self.virtual_snake_dq.copy()
         look_ahead_grid = self.create_grid_from_v_snake(virtual_snake_curr)

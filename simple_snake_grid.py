@@ -110,31 +110,8 @@ class SimpleSnakeGrid:
         return arr
 
     def bfs_actions(self):
-        virtual_snake_curr = self.virtual_snake_dq.copy()
-        look_ahead_grid = self.create_grid_from_v_snake(virtual_snake_curr)
-
-        follow_tail = self.bfs(
-            virtual_snake_curr[-1], look_ahead_grid, virtual_snake_curr[0])
-        print("follow tail actions ** ", follow_tail)
-
         actions = self.bfs(self.snake_head, self.snake_grid, self.snake_food)
-
-        # update our virtual snake to be at the food position if the path is available
-        if actions:
-            virtual_snake = self.virtual_snake_dq.copy()
-            self.perform_virtual_moves(actions, virtual_snake)
-            look_ahead_grid = self.create_grid_from_v_snake(virtual_snake)
-
-            # check for path to tail from here
-            if self.bfs(virtual_snake[-1], look_ahead_grid, virtual_snake[0]):
-                print("path to tail is availble from food location")
-                self.virtual_snake_dq = virtual_snake
-                return actions
-
-        print("no path is available from food source. Following tail!")
-        self.perform_virtual_moves(follow_tail, virtual_snake_curr)
-        self.virtual_snake_dq = virtual_snake_curr
-        return follow_tail
+        return actions
 
     def bfs(self, start, snake_grid, dest):
         queue = [(start, [])]

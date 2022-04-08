@@ -20,7 +20,7 @@ while True:
         break
     for action in actions:
         env.render()
-        observation, _, done, _ = env.step(action)  # take a random action
+        observation, _, done, _ = env.step(action)  # take bfs actions
 
     if done:
         env.render()
