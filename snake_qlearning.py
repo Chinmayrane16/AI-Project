@@ -353,11 +353,11 @@ class SnakeQlearning:
             self.QTable=pickle.load(inputfile)
         # print(self.QTable)
         # open the file in the write mode
-        f = open('qlearning_eval.csv', 'w',newline='')
+        # f = open('qlearning_eval.csv', 'w',newline='')
         # create the csv writer
-        writer = csv.writer(f)
+        # writer = csv.writer(f)
 
-        writer.writerow(['algo','iteration number','food count','step count','time'])
+        # writer.writerow(['algo','iteration number','food count','step count','time'])
 
         rows=[]
         self.epsilon = 0
@@ -382,7 +382,7 @@ class SnakeQlearning:
                 steps_counter+=1
                 reward = self.get_reward(curr_action)
 
-                # env.render()
+                env.render()
                 self.observation, _, done, _ = env.step(curr_action)
 
 
@@ -402,6 +402,6 @@ class SnakeQlearning:
 
         env.close()
 
-        writer.writerows(rows)
+        # writer.writerows(rows)
         # close the file
-        f.close()
+        # f.close()
