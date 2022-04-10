@@ -53,7 +53,7 @@ def play_game(actions):
         move_before = actions[0]
         for action in actions:
             action = distanceMoves(action, snake_grid, move_before)
-            # env.render()
+            env.render()
             observation, reward, done, _ = env.step(action)
             
             # Snake Length
@@ -77,7 +77,7 @@ def play_game(actions):
                 break
             
         if done:
-            # env.render()
+            env.render()
             break
 
     env.close()
@@ -174,8 +174,6 @@ for generation in range(GENERATIONS):
     # Measuring the fitness of each chromosome in the population.
     fitness, snake_lens, steps_count = cal_pop_fitness(new_population)
     print('#######  fittest chromosome in gneneration ' + str(generation) +' is having fitness value:  ', np.max(fitness))
-    print("Max len in this generation: ", max(snake_lens))
-    print("All lens in this generation: ", snake_lens)
     # Selecting the best parents in the population for mating.
     parents = select_mating_pool(new_population, fitness, num_parents_mating)
     
