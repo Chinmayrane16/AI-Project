@@ -8,7 +8,7 @@ from random import choice, randint
 np.set_printoptions(threshold=np.inf)
 
 # Create gym snake environment
-env = gym.make('snake-v0',grid_size=[15,15], unit_size=1,unit_gap=0,snake_size=2)
+env = gym.make('snake-v0',grid_size=[8,8], unit_size=1,unit_gap=0,snake_size=2)
 
 # Calculate distance to food to determine the next direction
 def moveDistanceToFood(food_x, food_y, snake_x, snake_y, move_before):
