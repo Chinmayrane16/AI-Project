@@ -4,13 +4,12 @@ Readme.txt content
 
 2. Overleaf link : https://www.overleaf.com/project/62068d2937b3030ba9006d29
 
-3. Presentation link : TBD
+3. Presentation link : https://drive.google.com/file/d/1B2MdrgURyAq8lUpXpGWMzlim6zKpEYpa/view?usp=sharing
 
 4. Contribution Summary
 
 Chinmay Rane : 
 Worked on implementing Q-learning with Omkar to solve the snake game. Experimented with different state features.
-Demonstrated the Q-learning agent in action in the demo video for the presentation.
 Added Introduction, Related work, Conclusion in the report.
 Migrated the entire report from google docs to overleaf. Handled report formatting.
 Literature review and added the References in the report.
@@ -40,7 +39,7 @@ Added Problem Definition and Future Work in the report.
 Demonstrated the A star with forward checking in action in the demo video for the presentation.
 
 
-Pratik Pathak
+Pratik Pathak:
 Worked on implementing the Genetic algorithm to solve the snake game.
 Generated evaluation numbers for Genetic algorithm by running the algorithm for 100 generations and counting the number of steps taken and food eaten each time.
 Added explanations related to Genetic algorithm in the report
