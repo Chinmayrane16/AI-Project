@@ -25,6 +25,9 @@ import numpy as np
 from collections import deque, Counter
 from simple_snake_grid import SimpleSnakeGrid
 import random
+import pickle
+import csv
+import time
 from math import sqrt
 
 
@@ -212,7 +215,7 @@ class SnakeQlearning:
         cols = len(snake_grid[0])
         newR = newHead[0]
         newC = newHead[1]
-        print("New Head", newHead, rows, cols)
+        # print("New Head", newHead, rows, cols)
         if newR < 0 or newR >= rows or newC < 0 or newC >= cols or (snake_grid[newR][newC] not in [0, 1]):
             return self.dying_reward
 
@@ -269,7 +272,7 @@ class SnakeQlearning:
         for i in range(self.numTrainEpisodes):
             # Construct Environment
             env = gym.make(
-                'snake-v0', grid_size=[6, 6], unit_size=1, unit_gap=0, snake_size=2)
+                'snake-v0', grid_size=[8, 8], unit_size=1, unit_gap=0, snake_size=2)
             self.observation = env.reset()  # Constructs an instance of the game
             self.snakeGridObj = SimpleSnakeGrid(self.observation)
             self.snakeGridObj.update_observation(self.observation)
@@ -287,13 +290,13 @@ class SnakeQlearning:
 
             reward = 0
             while True:
-                self.print_grid(self.snake_grid)
+                # self.print_grid(self.snake_grid)
                 curr_state = self.get_state(self.snakeGridObj.virtual_snake_dq)
                 # print("Curr State", curr_state)
                 curr_action = self.get_action()
                 actions_name = ["Up", "Right", "Down", "Left"]
-                print("Curr action", actions_name[curr_action])
-                print(self.get_features(self.snakeGridObj.virtual_snake_dq))
+                # print("Curr action", actions_name[curr_action])
+                # print(self.get_features(self.snakeGridObj.virtual_snake_dq))
                 # self.print_grid(self.snake_grid)
 
                 # Action = None handled in get_reward
@@ -319,13 +322,13 @@ class SnakeQlearning:
                 self.bellmanUpdate(curr_state, curr_action,
                                    nextState, reward, self.snake_grid, self.snake_head)
 
-                env.render()
+                # env.render()
                 self.observation, _, done, _ = env.step(curr_action)
 
                 self.rewards.append(reward)
                 self.accumRewards += reward
 
-                print()
+                # print()
 
                 if reward == 100:
                     self.snakeGridObj.update_observation(self.observation)
@@ -338,14 +341,33 @@ class SnakeQlearning:
 
         env.close()
 
+        # Store trained qtable
+        # print(self.QTable)
+
+        with open('QTable.pickle', 'wb') as outputfile:
+            pickle.dump(self.QTable, outputfile)
+
 
     def test(self):
-        self.epsilon = 0
+        with open('QTable.pickle', 'rb') as inputfile:
+            self.QTable=pickle.load(inputfile)
+        # print(self.QTable)
+        # open the file in the write mode
+        # f = open('qlearning_eval.csv', 'w',newline='')
+        # create the csv writer
+        # writer = csv.writer(f)
 
+        # writer.writerow(['algo','iteration number','food count','step count','time'])
+
+        rows=[]
+        self.epsilon = 0
         for i in range(self.numTestEpisodes):
+            row=['qlearning']
+            row.append(i+1)
+            start = time.time()
             # Construct Environment
             env = gym.make(
-                'snake-v0', grid_size=[6, 6], unit_size=1, unit_gap=0, snake_size=2)
+                'snake-v0', grid_size=[8, 8], unit_size=1, unit_gap=0, snake_size=2)
             self.observation = env.reset()  # Constructs an instance of the game
             self.snakeGridObj = SimpleSnakeGrid(self.observation)
             self.snakeGridObj.update_observation(self.observation)
@@ -353,19 +375,33 @@ class SnakeQlearning:
 
             self.snake_grid = self.snakeGridObj.snake_grid.copy()
             self.snake_head = self.snakeGridObj.snake_head.copy()
-
+            steps_counter=0
             reward = 0
             while True:
                 curr_action = self.get_action()
+                steps_counter+=1
                 reward = self.get_reward(curr_action)
+
+                env.render()
+                self.observation, _, done, _ = env.step(curr_action)
+
+
                 if reward == self.dying_reward:
+                    foodcount = len(self.snakeGridObj.virtual_snake_dq) - 2
+                    row.append(foodcount)
+                    row.append(steps_counter)
+                    row.append(time.time()-start)
+                    rows.append(row)
+                    env.close()
                     break
 
                 self.update_dq(curr_action, reward)
-                env.render()
-                self.observation, _, done, _ = env.step(curr_action)
 
                 if reward == 100:
                     self.snakeGridObj.update_observation(self.observation)
 
         env.close()
+
+        # writer.writerows(rows)
+        # close the file
+        # f.close()
