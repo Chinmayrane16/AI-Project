@@ -8,5 +8,5 @@
 | 27-03-2022 | 19:00 | 1. Modified A* search with forward checking <br/> 2. Discussed progress <br/> 3. Decided upon metrics for evaluation - Avg. food eaten, No of steps taken, time taken |
 | 3-04-2022 | 18:00 | 1. Decided to use Hamitonian cycle as baseline <br/> 2. Progress check |
 | 6-04-2022 | 20:30 | 1. Discussion about demonstration and slides <br/> 2. Pratush to help Pratik with Genetic logic <br/> 3. Reviewed lecture to look at the sample report |
-| 8-04-2022 | 22:00 | 1. Store results file for evaluation <br/> Udisha started writing report <br/> 2. Experimentation with Q-Learning features <br/> 3. Chinmay - Migrate report from docs to overleaf |
+| 8-04-2022 | 22:00 | 1. Store results file for evaluation <br/> 2. Udisha started writing report <br/> 3. Experimentation with Q-Learning features <br/> 4. Chinmay - Migrate report from docs to overleaf |
 | 10-04-2022 | 15:30 | 1. Report status discussion <br/> 2. Remaining tasks distributed <br/> 3. Meet today at 20:00 for final report review |
